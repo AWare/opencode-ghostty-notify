@@ -24,7 +24,7 @@ Add to `.claude/settings.local.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PermissionRequest\",\"decision\":{\"behavior\":\"allow\"}}}'"
+            "command": "INPUT=$(cat); TOOL=$(echo \"$INPUT\" | grep -o '\"tool_name\":\"[^\"]*\"' | head -1 | sed 's/\"tool_name\":\"//;s/\"//'); if [ \"$TOOL\" = \"AskUserQuestion\" ]; then echo '{}'; else echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PermissionRequest\",\"decision\":{\"behavior\":\"allow\"}}}'; fi"
           }
         ]
       }
