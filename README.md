@@ -1,117 +1,27 @@
-# agent-workflow
+# opencode-ghostty-notify
 
-Claude Code plugins for agent workflows.
-
-## Plugins
-
-### ghostty-notifications
-
-Ghostty terminal notifications for Claude Code events. Sends a bell (dock bounce, tab indicator) and OSC 777 desktop notification when Claude needs attention.
-
-Fires on: `permission_prompt`, `idle_prompt`, `auth_success`, `elicitation_dialog`.
+Ghostty terminal notifications for opencode. Sends a bell (dock bounce, tab indicator) and OSC 777 desktop notification when the opencode session goes idle.
 
 See [ghostty-tab-notifications.md](ghostty-tab-notifications.md) for the full writeup on how this works and what was tried.
 
-### yolo
+## Install
 
-Auto-handle Claude Code permission requests. Two modes:
+Copy both files to `.opencode/plugins/` in your project, or `~/.config/opencode/plugins/` for global use:
 
-- **review** (default) — route each request to Claude Opus 4.5 for security evaluation. Safe operations get auto-approved, dangerous ones fall through to the permission dialog.
-- **approve-all** — auto-approve everything with zero latency.
-
-Includes a `/yolo` skill for toggling modes.
-
-## Install as plugins
-
-Add the marketplace and install:
-
-```
-/plugin marketplace add recursechat/agent-workflow
-/plugin install ghostty-notifications@recursechat-agent-workflow
-/plugin install yolo@recursechat-agent-workflow
+```bash
+cp plugins/ghostty-notifications/ghostty-notify.ts .opencode/plugins/
+cp plugins/ghostty-notifications/ghostty-notify.sh .opencode/plugins/
+chmod +x .opencode/plugins/ghostty-notify.sh
 ```
 
-## Install manually (without marketplace)
+opencode automatically loads all `.ts` and `.js` files in the plugins directory.
 
-### Ghostty notifications
+## How it works
 
-Add to `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "permission_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/ghostty-notify.sh 'Needs permission'"
-          }
-        ]
-      },
-      {
-        "matcher": "idle_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/ghostty-notify.sh 'Waiting for input'"
-          }
-        ]
-      },
-      {
-        "matcher": "auth_success",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/ghostty-notify.sh 'Auth successful'"
-          }
-        ]
-      },
-      {
-        "matcher": "elicitation_dialog",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/ghostty-notify.sh 'Asking a question'"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Copy `plugins/ghostty-notifications/scripts/ghostty-notify.sh` to `~/.claude/hooks/` and make it executable.
-
-### Permission review
-
-Copy `plugins/yolo/scripts/permission-review.sh` and `ghostty-notify.sh` to `.claude/hooks/` in your project (or `~/.claude/hooks/` for global). Make executable.
-
-Add to `.claude/settings.local.json` (or `~/.claude/settings.json` for global):
-
-```json
-{
-  "hooks": {
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/permission-review.sh",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+The plugin hooks into the `session.idle` event, which fires when the agent finishes responding. It calls `ghostty-notify.sh`, which walks up the process tree to find the ancestor TTY (since plugins run without a controlling terminal) and writes the OSC 777 escape sequence and bell directly to that TTY device.
 
 ## Notes
 
-- Restart your session after installing/editing hooks -- they're snapshotted at startup
-- `PermissionRequest` hooks don't fire in non-interactive mode (`-p`)
-- Use `claude --debug` and `Ctrl+O` (verbose mode) to see hook execution
-- Check `/hooks` in Claude Code to verify hooks are loaded
-- Only `type: "command"` hooks work with `PermissionRequest` (prompt hooks don't fire for this event)
+- Restart opencode after adding plugins
+- Only fires on `session.idle` (agent done) — no permission prompts or other events in opencode's plugin API
+- Requires Ghostty with `desktop-notifications = true` in your Ghostty config for banner notifications; bell alone works without it
