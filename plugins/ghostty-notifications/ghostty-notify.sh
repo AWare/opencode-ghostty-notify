@@ -21,7 +21,7 @@ if [ -z "$TTY" ]; then
 fi
 
 # Send OSC 777 desktop notification + bell to the Ghostty terminal
-printf '\033]777;notify;Claude Code;%s\007' "$MSG" > "$TTY"
+printf '\033]777;notify;opencode;%s\007' "$MSG" > "$TTY"
 printf '\a' > "$TTY"
 
 exit 0
