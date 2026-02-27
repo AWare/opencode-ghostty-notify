@@ -4,6 +4,8 @@ Ghostty terminal notifications for opencode. Sends a bell (dock bounce, tab indi
 
 See [ghostty-tab-notifications.md](ghostty-tab-notifications.md) for the full writeup on how this works and what was tried.
 
+This is a fork of [agent-workflow](https://github.com/recursechat/agent-workflow) from recurse chat.
+
 ## Install
 
 Copy both files to `.opencode/plugins/` in your project, or `~/.config/opencode/plugins/` for global use:
